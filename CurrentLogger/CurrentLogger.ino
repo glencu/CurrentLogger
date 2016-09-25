@@ -3,12 +3,10 @@
 #include <Wire.h>
 #include <DS3231.h>
 
-#include "RS485.h"
-#include "OrnoReadHoldingRegistersCommand.h"
-#include "OrnoReadHoldingRegistersResponse.h"
-#include "OrnoHelper.h"
-#include "SDLogger.h"
 
+#include "SDLogger.h"
+#include "OrnoManager.h"
+#include "OrnoReadHoldingRegistersResponse.h"
 
 #define rxPin 0 // Our Serial RX pin connected to RO- Receiver Output Pin on Max485- we receive on
 #define txPin 1 // Our Serial TX pin connected to DI- Driver Output Pin on Max485 - we send on
@@ -19,13 +17,31 @@
 
 DS3231 clock;
 RTCDateTime dt;
-RS485 rs485(txPin,rxPin,switchPin);
-OrnoReadHoldingRegistersCommand readCommand;
-OrnoReadHoldingRegistersResponse readResponse;
+
+
 char logBuffer[BUFF_LEN];
 char dateBuf[DATE_LEN];
-unsigned char responseBuffer[OrnoReadHoldingRegistersResponse::RESPONSE_LENGHT];
+
 SDLogger *sdlogger;
+OrnoManager ornoManager;
+OrnoReadHoldingRegistersResponse readResponse;
+
+void printInitialDate() {
+	dt = clock.getDateTime();
+	Serial.print("Raw data: ");
+	Serial.print(dt.year);
+	Serial.print("-");
+	Serial.print(dt.month);
+	Serial.print("-");
+	Serial.print(dt.day);
+	Serial.print(" ");
+	Serial.print(dt.hour);
+	Serial.print(":");
+	Serial.print(dt.minute);
+	Serial.print(":");
+	Serial.print(dt.second);
+	Serial.println("");
+}
 
 void setup() {
 
@@ -34,17 +50,8 @@ void setup() {
 	 Serial.println("Starting system");
 	 clock.begin();
 	 delay(2000);
-	 dt = clock.getDateTime();
-
-	 Serial.print("Raw data: ");
-	 Serial.print(dt.year);   Serial.print("-");
-	 Serial.print(dt.month);  Serial.print("-");
-	 Serial.print(dt.day);    Serial.print(" ");
-	 Serial.print(dt.hour);   Serial.print(":");
-	 Serial.print(dt.minute); Serial.print(":");
-	 Serial.print(dt.second); Serial.println("");
-
-  Serial.print("Initializing SD card...");
+	 printInitialDate();
+	 Serial.print("Initializing SD card...");
 
   if (!SD.begin(4)) {
     Serial.println("initialization failed!");
@@ -53,22 +60,18 @@ void setup() {
   Serial.println("initialization done.");
   sdlogger = new SDLogger();
   delay(1000);
-  rs485.Init();
-  //No Serial.println from this line!!
-  readCommand.setSlaveAddress(0x01);
-  readCommand.setDataAdress(0x00);
-  readCommand.setNumOfRegisters(0x0010);
 
+  ornoManager.Init(txPin , rxPin, switchPin);
+
+  //No Serial.println from this line!!
+  ornoManager.configureReadCommand( 0x01 , 0x00, 0x0010 );
   delay(1000);
 
 }
 
 void loop() {
 
-  unsigned char* command = readCommand.getCommand();
-
-  rs485.Send(command);
-  delete command;
+  ornoManager.sendReadCommand();
 
   dt = clock.getDateTime();
   memset(dateBuf, 0 , DATE_LEN);
@@ -76,38 +79,13 @@ void loop() {
 
   memset(logBuffer, 0 , BUFF_LEN);
 
-  if (true == rs485.checkIfNumOfBytesAvailable(OrnoReadHoldingRegistersResponse::RESPONSE_LENGHT))
+  if (  ornoManager.receivedFrame() == true )
   {
-	  rs485.ReceiveResponse(OrnoReadHoldingRegistersResponse::RESPONSE_LENGHT,&responseBuffer[0]);
-	  readResponse.setResponseBuffer(responseBuffer);
-	  unsigned short receivedFrameCrc = readResponse.getCrc();
-      unsigned short evaluatedCrc = OrnoHelper::ModRTU_CRC( readResponse.getResponseBuffer(), 35 );
-
-
-      if ( evaluatedCrc == receivedFrameCrc )
-      {
-
-    	  sprintf(logBuffer,"%s Volts: %d Current %d.%d Actual Power %d.%2d Kwh %lu.%2lu\n" ,dateBuf,readResponse.getVolt() ,
-    			  readResponse.getCurrent().value, readResponse.getCurrent().fraction ,
-				  readResponse.getActualPower().value,readResponse.getActualPower().fraction,
-				  readResponse.getKWh().value,readResponse.getKWh().fraction);
-
-      }
-      else
-      {
-    	  sprintf(logBuffer," %s Received frame bad CRC\n", dateBuf );
-
-      }
+	  readResponse = ornoManager.getResponse();
+	  sdlogger->LogToFile(logBuffer);
   }
-  else
-  {
-	  sprintf(logBuffer,"%s Error when receiving data from module\n" ,dateBuf);
-  }
-  sdlogger->LogToFile(logBuffer);
-
 
   delay(1000); //for test
-
 }
 
 
