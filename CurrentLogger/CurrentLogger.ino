@@ -26,7 +26,8 @@ SDLogger *sdlogger;
 OrnoManager ornoManager;
 OrnoReadHoldingRegistersResponse readResponse;
 
-void printInitialDate() {
+void printInitialDate()
+{
 	dt = clock.getDateTime();
 	Serial.print("Raw data: ");
 	Serial.print(dt.year);
@@ -43,7 +44,8 @@ void printInitialDate() {
 	Serial.println("");
 }
 
-void setup() {
+void setup()
+{
 
 	 Serial.begin(9600);
 	 delay(2000);
@@ -69,7 +71,8 @@ void setup() {
 
 }
 
-void loop() {
+void loop()
+{
 
   ornoManager.sendReadCommand();
 
@@ -82,7 +85,12 @@ void loop() {
   if (  ornoManager.receivedFrame() == true )
   {
 	  readResponse = ornoManager.getResponse();
+	  sprintf(logBuffer,"%s Volts: %d Current %d.%d Actual Power %d.%2d Kwh %lu.%2lu\n" ,dateBuf,readResponse.getVolt() ,
+	      			  readResponse.getCurrent().value, readResponse.getCurrent().fraction ,
+	  				  readResponse.getActualPower().value,readResponse.getActualPower().fraction,
+	  readResponse.getKWh().value,readResponse.getKWh().fraction);
 	  sdlogger->LogToFile(logBuffer);
+
   }
 
   delay(1000); //for test
