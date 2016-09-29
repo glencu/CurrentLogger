@@ -2,10 +2,11 @@
 #include <Wire.h>
 #include <DS3231.h>
 #include <EtherCard.h>
+#include <SD.h>
 
+#include "SDLogger.h"
 #include "OrnoManager.h"
 #include "OrnoReadHoldingRegistersResponse.h"
-
 
 // ethernet interface mac address, must be unique on the LAN
 static byte mymac[] = { 0x74,0x69,0x69,0x2D,0x30,0x31 };
@@ -44,6 +45,9 @@ RTCDateTime dt;
 
 char logBuffer[BUFF_LEN];
 
+char dateBuf[DATE_LEN];
+
+SDLogger sdlogger;
 OrnoManager ornoManager;
 OrnoReadHoldingRegistersResponse readResponse;
 
@@ -75,6 +79,14 @@ void setup()
   delay(500);
   printInitialDate();
   delay(1000);
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(4))
+  {
+     Serial.println("initialization failed!");
+     return;
+  }
+
+  Serial.println("SD initialization done.");
 
   if (ether.begin(sizeof Ethernet::buffer, mymac) == 0)
       Serial.println(F("Failed to access Ethernet controller"));
@@ -97,13 +109,25 @@ void loop()
   static uint32_t cntr=0;
 
   ether.packetLoop(ether.packetReceive());
-  if (millis() > timer) {
+  if (millis() > timer)
+  {
   timer = millis() + 5000;
   ornoManager.sendReadCommand();
 
   if (  ornoManager.receivedFrame() == true )
   {
+	  dt = clock.getDateTime();
+	  memset(dateBuf, 0 , DATE_LEN);
+	  sprintf(dateBuf,"%d-%d-%d %d:%d:%d ",dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second);
+
 	  readResponse = ornoManager.getResponse();
+	  sprintf(logBuffer,"%s Volts: %d Current %d.%d Actual Power %d.%2d Kwh %lu.%2lu\n" ,dateBuf,readResponse.getVolt() ,
+	  	      			  readResponse.getCurrent().value, readResponse.getCurrent().fraction ,
+	  	  				  readResponse.getActualPower().value,readResponse.getActualPower().fraction,
+	  readResponse.getKWh().value,readResponse.getKWh().fraction);
+
+	  sdlogger.LogToFile(logBuffer);
+
 	  memset(logBuffer, 0 , BUFF_LEN);
 	  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",13,readResponse.getCurrent().value, readResponse.getCurrent().fraction);
 	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
