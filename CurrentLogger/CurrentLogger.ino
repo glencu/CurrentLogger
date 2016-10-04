@@ -38,11 +38,21 @@ static void my_callback (byte status, word off, word len) {
 #define BUFF_LEN (100)
 #define DATE_LEN (35)
 
+
+enum State
+{
+	READING_ORNO,
+	SENDING_CURRENT,
+	SENDING_WATT
+};
+
 DS3231 clock;
 RTCDateTime dt;
 
 
 char logBuffer[BUFF_LEN];
+
+State state = READING_ORNO;
 
 OrnoManager ornoManager;
 OrnoReadHoldingRegistersResponse readResponse;
@@ -97,17 +107,32 @@ void loop()
   static uint32_t cntr=0;
 
   ether.packetLoop(ether.packetReceive());
-  if (millis() > timer) {
-  timer = millis() + 5000;
-  ornoManager.sendReadCommand();
-
-  if (  ornoManager.receivedFrame() == true )
+  if (millis() > timer)
   {
-	  readResponse = ornoManager.getResponse();
-	  memset(logBuffer, 0 , BUFF_LEN);
-	  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",13,readResponse.getCurrent().value, readResponse.getCurrent().fraction);
-	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
-  }
+	  timer = millis() + 1000;
+	  if ( state == READING_ORNO )
+	  {
+		  ornoManager.sendReadCommand();
+		  if (  ornoManager.receivedFrame() == true )
+		  {
+			  readResponse = ornoManager.getResponse();
+			  state = SENDING_CURRENT;
+		  }
+	  }
+	  else  if ( state == SENDING_CURRENT )
+	  {
+		  memset(logBuffer, 0 , BUFF_LEN);
+		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",13,readResponse.getCurrent().value, readResponse.getCurrent().fraction);
+		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
+		  state = SENDING_WATT;
 
+	  }
+	  else  if ( state == SENDING_WATT )
+	  {
+		  memset(logBuffer, 0 , BUFF_LEN);
+		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",14,readResponse.getActualPower().value, readResponse.getActualPower().fraction);
+		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
+		  state = READING_ORNO;
+	  }
   }
 }
