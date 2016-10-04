@@ -27,31 +27,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Libraries/Arduino-DS3231-master</name>
-			<type>2</type>
-			<location>C:/Users/Bobasek/Documents/Arduino/libraries/Arduino-DS3231-master</location>
-		</link>
-		<link>
-			<name>Libraries/SD</name>
-			<type>2</type>
-			<locationURI>ArduinoLibPath/SD</locationURI>
-		</link>
-		<link>
-			<name>Libraries/SDLogger</name>
-			<type>2</type>
-			<locationURI>ArduinoPrivateLibPath/SDLogger</locationURI>
-		</link>
-		<link>
-			<name>Libraries/SPI</name>
-			<type>2</type>
-			<locationURI>ArduinoHardwareLibPath/SPI</locationURI>
-		</link>
-		<link>
-			<name>Libraries/Wire</name>
-			<type>2</type>
-			<locationURI>ArduinoHardwareLibPath/Wire</locationURI>
-		</link>
-		<link>
 			<name>arduino/core</name>
 			<type>2</type>
 			<locationURI>ArduinoPlatformPath/arduino</locationURI>
@@ -70,6 +45,21 @@
 			<name>core/variant</name>
 			<type>2</type>
 			<location>C:/Tools/eclipseArduino/arduinoPlugin/packages/arduino/hardware/avr/1.6.9/variants/eightanaloginputs</location>
+		</link>
+		<link>
+			<name>libraries/SPI</name>
+			<type>2</type>
+			<location>C:/Tools/eclipseArduino/arduinoPlugin/packages/arduino/hardware/avr/1.6.9/libraries/SPI</location>
+		</link>
+		<link>
+			<name>libraries/Wire</name>
+			<type>2</type>
+			<location>C:/Tools/eclipseArduino/arduinoPlugin/packages/arduino/hardware/avr/1.6.9/libraries/Wire</location>
+		</link>
+		<link>
+			<name>libraries/ethercard-master</name>
+			<type>2</type>
+			<location>C:/Users/Bobasek/Documents/Arduino/libraries/ethercard-master</location>
 		</link>
 	</linkedResources>
 	<variableList>

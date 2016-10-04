@@ -21,15 +21,12 @@
 								<option id="it.baeyens.arduino.compiler.cpp.sketch.option.incpath.517445309" name="Include Paths (-I)" superClass="it.baeyens.arduino.compiler.cpp.sketch.option.incpath" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/arduino/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/arduino/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SD}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SD/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SPI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SDLogger}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/Arduino-DS3231-master}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/Wire/utility}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/core/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/core/variant}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/Wire/utility}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/SPI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/ethercard-master}&quot;"/>
 								</option>
 								<inputType id="it.baeyens.arduino.compiler.cpp.sketch.input.1556963522" name="CPP source files" superClass="it.baeyens.arduino.compiler.cpp.sketch.input"/>
 							</tool>
@@ -37,15 +34,12 @@
 								<option id="it.baeyens.arduino.compiler.c.sketch.option.incpath.1091083006" name="Include Paths (-I)" superClass="it.baeyens.arduino.compiler.c.sketch.option.incpath" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/arduino/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/arduino/variant}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SD}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SD/src}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SPI}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/SDLogger}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/Arduino-DS3231-master}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/Wire}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/Libraries/Wire/utility}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/core/core}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/core/variant}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/Wire}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/Wire/utility}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/SPI}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/CurrentLogger/libraries/ethercard-master}&quot;"/>
 								</option>
 								<inputType id="it.baeyens.arduino.compiler.c.sketch.input.283087438" name="C Source Files" superClass="it.baeyens.arduino.compiler.c.sketch.input"/>
 							</tool>
