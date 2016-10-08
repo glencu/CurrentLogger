@@ -34,7 +34,7 @@ static void my_callback (byte status, word off, word len)
 
 #define BUFF_LEN (100)
 
-void updateDomoticz( uint8_t, int16_t, uint16_t );
+void updateDomoticz( uint8_t, uint16_t, uint16_t );
 
 enum State
 {
@@ -139,7 +139,8 @@ void loop()
 	  }
 	  else  if ( state == SENDING_WATT )
 	  {
-		  updateDomoticz( DOMOTICZ_RECOVERY_WATT_ID ,readResponse.getActualPower().value ,readResponse.getActualPower().fraction );
+		  uint16_t watts = (readResponse.getActualPower().value * 1000) + readResponse.getActualPower().fraction;
+		  updateDomoticz( DOMOTICZ_RECOVERY_WATT_ID ,watts, 0 );
 		  state = SENDING_TEMPERATURE;
 	  }
 	  else  if ( state == SENDING_NULL_CURRENT )
@@ -155,7 +156,7 @@ void loop()
   }
 }
 
-void updateDomoticz(uint8_t deviceId , int16_t value , uint16_t fraction)
+void updateDomoticz(uint8_t deviceId , uint16_t value , uint16_t fraction)
 {
 	memset(logBuffer, 0 , BUFF_LEN);
     sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",deviceId,value,fraction);
