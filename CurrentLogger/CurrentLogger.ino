@@ -17,18 +17,15 @@ const char website[] PROGMEM = "192.168.8.6:8080";
 const static uint8_t ip[] = {192,168,8,8};
 const static uint8_t gw[] = {192,168,8,1};
 const static uint8_t dns[] = {192,168,8,1};
-// called when the client request is complete
 
 
-static void my_callback (byte status, word off, word len) {
-  int status_index = -1;
-  int ok_index = -1;
- // Ethernet::buffer[off+200] = 0;
+const static uint8_t DOMOTICZ_RECOVERY_CURRENT_ID = 13;
+const static uint8_t DOMOTICZ_RECOVERY_WATT_ID = 14;
+const static uint8_t DOMOTICZ_LOFT_TEMPERATURE_ID = 16;
 
-/*  if ( strstr((const char*) Ethernet::buffer + off , ": \"OK\"") != NULL )
-	  Serial.println("OK");
-  else
-	  Serial.println("Error");*/
+static void my_callback (byte status, word off, word len)
+{
+	//TODO: Error handling
 }
 
 #define rxPin 0 // Our Serial RX pin connected to RO- Receiver Output Pin on Max485- we receive on
@@ -36,15 +33,17 @@ static void my_callback (byte status, word off, word len) {
 #define switchPin 7 // Arduino's Pin 7 Connected to Pins 2 & 3 (RE/DE) on MAX485
 
 #define BUFF_LEN (100)
-#define DATE_LEN (35)
 
+void updateDomoticz( uint8_t, int16_t, uint16_t );
 
 enum State
 {
 	READING_ORNO,
 	SENDING_CURRENT,
 	SENDING_WATT,
-	SENDING_TEMPERATURE
+	SENDING_TEMPERATURE,
+	SENDING_NULL_CURRENT,
+	SENDING_NULL_WATT
 };
 
 DS3231 clock;
@@ -52,7 +51,7 @@ RTCDateTime dt;
 
 char logBuffer[BUFF_LEN];
 
-State state = READING_ORNO;
+State state = SENDING_TEMPERATURE;
 
 OrnoManager ornoManager;
 OrnoReadHoldingRegistersResponse readResponse;
@@ -87,14 +86,14 @@ void setup()
   delay(1000);
 
   if (ether.begin(sizeof Ethernet::buffer, mymac) == 0)
-      Serial.println(F("Failed to access Ethernet controller"));
+      Serial.println( F("Failed to access Ethernet controller") );
   if(!ether.staticSetup(ip, gw, dns))
-      Serial.println(F("static failed"));
+      Serial.println( F("static failed") );
 
-  ether.parseIp(ether.hisip, "192.168.8.6");
+  ether.parseIp( ether.hisip, "192.168.8.6" );
   ether.hisport = 8080;
 
-  ornoManager.Init(txPin , rxPin, switchPin);
+  ornoManager.Init( txPin , rxPin, switchPin );
 
   //No Serial.println from this line!!
   ornoManager.configureReadCommand( 0x01 , 0x00, 0x0010 );
@@ -104,13 +103,23 @@ void setup()
 
 void loop()
 {
-  static uint32_t cntr=0;
-
   ether.packetLoop(ether.packetReceive());
+
   if (millis() > timer)
   {
 	  timer = millis() + 1000;
-	  if ( state == READING_ORNO )
+	  if ( state == SENDING_TEMPERATURE )
+	  {
+	  		  clock.forceConversion();
+	  		  float temperature = clock.readTemperature();
+	  		  temperature *= 100;
+	  		  uint16_t highTemp = (uint16_t)temperature / 100;
+	  		  uint16_t lowTemp = (uint16_t)temperature % 100;
+
+	  		  updateDomoticz( DOMOTICZ_LOFT_TEMPERATURE_ID ,highTemp ,lowTemp );
+	  		  state = READING_ORNO;
+	  }
+	  else if ( state == READING_ORNO )
 	  {
 		  ornoManager.sendReadCommand();
 		  if (  ornoManager.receivedFrame() == true )
@@ -118,34 +127,37 @@ void loop()
 			  readResponse = ornoManager.getResponse();
 			  state = SENDING_CURRENT;
 		  }
+		  else
+		  {
+			  state = SENDING_NULL_CURRENT;
+		  }
 	  }
 	  else  if ( state == SENDING_CURRENT )
 	  {
-		  memset(logBuffer, 0 , BUFF_LEN);
-		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",13,readResponse.getCurrent().value, readResponse.getCurrent().fraction);
-		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
+		  updateDomoticz( DOMOTICZ_RECOVERY_CURRENT_ID ,readResponse.getCurrent().value ,readResponse.getCurrent().fraction );
 		  state = SENDING_WATT;
-
 	  }
 	  else  if ( state == SENDING_WATT )
 	  {
-		  memset(logBuffer, 0 , BUFF_LEN);
-		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",14,readResponse.getActualPower().value, readResponse.getActualPower().fraction);
-		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
+		  updateDomoticz( DOMOTICZ_RECOVERY_WATT_ID ,readResponse.getActualPower().value ,readResponse.getActualPower().fraction );
 		  state = SENDING_TEMPERATURE;
 	  }
-	  else  if ( state == SENDING_TEMPERATURE )
+	  else  if ( state == SENDING_NULL_CURRENT )
 	  {
-		  clock.forceConversion();
-		  float temperature = clock.readTemperature();
-		  temperature *= 100;
-		  uint16_t highTemp = (uint16_t)temperature / 100;
-		  uint16_t lowTemp = (uint16_t)temperature % 100;
-
-		  memset(logBuffer, 0 , BUFF_LEN);
-		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",16,highTemp , lowTemp);
-		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
-		  state = READING_ORNO;
+		  updateDomoticz( DOMOTICZ_RECOVERY_CURRENT_ID ,0 ,0 );
+		  state = SENDING_NULL_WATT;
+	  }
+	  else  if ( state == SENDING_NULL_WATT )
+	  {
+		  updateDomoticz( DOMOTICZ_RECOVERY_WATT_ID ,0 ,0 );
+		  state = SENDING_TEMPERATURE;
 	  }
   }
+}
+
+void updateDomoticz(uint8_t deviceId , int16_t value , uint16_t fraction)
+{
+	memset(logBuffer, 0 , BUFF_LEN);
+    sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",deviceId,value,fraction);
+	ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
 }
