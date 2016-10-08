@@ -14,7 +14,7 @@ byte Ethernet::buffer[700];
 static uint32_t timer;
 
 const char website[] PROGMEM = "192.168.8.6:8080";
-const static uint8_t ip[] = {192,168,137,100};
+const static uint8_t ip[] = {192,168,137,8};
 const static uint8_t gw[] = {192,168,137,1};
 const static uint8_t dns[] = {192,168,137,1};
 // called when the client request is complete
@@ -43,12 +43,12 @@ enum State
 {
 	READING_ORNO,
 	SENDING_CURRENT,
-	SENDING_WATT
+	SENDING_WATT,
+	SENDING_TEMPERATURE
 };
 
 DS3231 clock;
 RTCDateTime dt;
-
 
 char logBuffer[BUFF_LEN];
 
@@ -131,6 +131,19 @@ void loop()
 	  {
 		  memset(logBuffer, 0 , BUFF_LEN);
 		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",14,readResponse.getActualPower().value, readResponse.getActualPower().fraction);
+		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
+		  state = SENDING_TEMPERATURE;
+	  }
+	  else  if ( state == SENDING_TEMPERATURE )
+	  {
+		  clock.forceConversion();
+		  float temperature = clock.readTemperature();
+		  temperature *= 100;
+		  uint16_t highTemp = (uint16_t)temperature / 100;
+		  uint16_t lowTemp = (uint16_t)temperature % 100;
+
+		  memset(logBuffer, 0 , BUFF_LEN);
+		  sprintf(logBuffer,"/json.htm?type=command&param=udevice&idx=%d&nvalue=0&svalue=%d.%d",16,highTemp , lowTemp);
 		    	  ether.browseUrl(PSTR(""),logBuffer, website, my_callback);
 		  state = READING_ORNO;
 	  }
