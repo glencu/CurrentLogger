@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include "RS485.h"
-#include "SDLogger.h"
 
 RS485::RS485(UINT8 txPin , UINT8 rxPin, UINT8 switchPin):txPin(txPin),rxPin(rxPin),switchPin(switchPin),isInit(false)
 {
