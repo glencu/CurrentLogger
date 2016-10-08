@@ -14,9 +14,9 @@ byte Ethernet::buffer[700];
 static uint32_t timer;
 
 const char website[] PROGMEM = "192.168.8.6:8080";
-const static uint8_t ip[] = {192,168,137,8};
-const static uint8_t gw[] = {192,168,137,1};
-const static uint8_t dns[] = {192,168,137,1};
+const static uint8_t ip[] = {192,168,8,8};
+const static uint8_t gw[] = {192,168,8,1};
+const static uint8_t dns[] = {192,168,8,1};
 // called when the client request is complete
 
 
